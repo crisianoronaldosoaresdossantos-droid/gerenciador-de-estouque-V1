@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciador de Estoque</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #e6e4e7;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    form, .acoes {
+      background: rgb(48, 28, 121);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    input, button {
+      padding: 8px;
+      margin: 5px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      background: white;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #000000;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #333;
+      color: rgb(255, 255, 255);
+    }
+
+    .baixo {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gerenciador de Estoque</h1>
+
+  <h2>Cadastrar Produto</h2>
+
+  <form id="formProduto">
+    <input type="number" id="id" placeholder="ID" required>
+    <input type="text" id="nome" placeholder="Nome do produto" required>
+    <input type="text" id="categoria" placeholder="Categoria" required>
+    <input type="number" id="quantidade" placeholder="Quantidade" required>
+    <input type="number" id="preco" placeholder="Preço" step="0.01" required>
+    <input type="number" id="estoqueMinimo" placeholder="Estoque mínimo" required>
+    <button type="submit">Adicionar Produto</button>
+  </form>
+
+  <h2>Movimentar Estoque</h2>
+
+  <div class="acoes">
+    <input type="number" id="idMovimento" placeholder="ID do produto">
+    <input type="number" id="quantidadeMovimento" placeholder="Quantidade">
+    <button onclick="entradaEstoque()">Adicionar Estoque</button>
+    <button onclick="saidaEstoque()">Remover Estoque</button>
+  </div>
+
+  <h2>Produtos</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Categoria</th>
+        <th>Quantidade</th>
+        <th>Preço</th>
+        <th>Estoque mínimo</th>
+        <th>Status</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaProdutos"></tbody>
+  </table>
+
+  <script>
+    let produtos = [];
+
+    function adicionarProduto(produto) {
+      produtos.push(produto);
+      atualizarTabela();
+    }
+
+    function removerProduto(id) {
+      produtos = produtos.filter(produto => produto.id !== id);
+      atualizarTabela();
+    }
+
+    function buscarProduto(id) {
+      return produtos.find(produto => produto.id === id);
+    }
+
+    function adicionarEstoque(id, quantidade) {
+      const produto = buscarProduto(id);
+
+      if (produto) {
+        produto.quantidade += quantidade;
+        atualizarTabela();
+      } else {
+        alert("Produto não encontrado");
+      }
+    }
+
+    function removerEstoque(id, quantidade) {
+      const produto = buscarProduto(id);
+
+      if (!produto) {
+        alert("Produto não encontrado");
+        return;
+      }
+
+      if (produto.quantidade >= quantidade) {
+        produto.quantidade -= quantidade;
+        atualizarTabela();
+      } else {
+        alert("Estoque insuficiente");
+      }
+    }
+
+    function atualizarTabela() {
+      const tabela = document.getElementById("tabelaProdutos");
+      tabela.innerHTML = "";
+
+      produtos.forEach(produto => {
+        const status = produto.quantidade <= produto.estoqueMinimo
+          ? '<span class="baixo">Estoque baixo</span>'
+          : 'OK';
+
+        tabela.innerHTML += `
+          <tr>
+            <td>${produto.id}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.categoria}</td>
+            <td>${produto.quantidade}</td>
+            <td>R$ ${produto.preco.toFixed(2)}</td>
+            <td>${produto.estoqueMinimo}</td>
+            <td>${status}</td>
+            <td>
+              <button onclick="removerProduto(${produto.id})">Excluir</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    document.getElementById("formProduto").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const produto = {
+        id: Number(document.getElementById("id").value),
+        nome: document.getElementById("nome").value,
+        categoria: document.getElementById("categoria").value,
+        quantidade: Number(document.getElementById("quantidade").value),
+        preco: Number(document.getElementById("preco").value),
+        estoqueMinimo: Number(document.getElementById("estoqueMinimo").value)
+      };
+
+      adicionarProduto(produto);
+
+      document.getElementById("formProduto").reset();
+    });
+
+    function entradaEstoque() {
+      const id = Number(document.getElementById("idMovimento").value);
+      const quantidade = Number(document.getElementById("quantidadeMovimento").value);
+
+      adicionarEstoque(id, quantidade);
+    }
+
+    function saidaEstoque() {
+      const id = Number(document.getElementById("idMovimento").value);
+      const quantidade = Number(document.getElementById("quantidadeMovimento").value);
+
+      removerEstoque(id, quantidade);
+    }
+  </script>
+
+</body>
+</html>
